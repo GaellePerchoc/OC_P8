@@ -67,6 +67,32 @@
 	};
 
 	/**
+	 * Will generate an unique ID
+	 *
+	 * @param {array} todos An array of objects to check into to set an unique ID 
+	*/
+
+	Store.prototype._setItemId = function(todos){
+		var newId = ""; 
+	    var charset = "0123456789";
+
+	    while(newId == ""){
+	    	for (var i = 0; i < 6; i++) {
+     			newId += charset.charAt(Math.floor(Math.random() * charset.length));
+			}
+
+		    todos.find(function(todo){
+		    	if(todo.id == newId){
+		    		return newId = "";
+		    	} 
+		    })
+
+		    return newId;
+	    }
+
+	}
+
+	/**
 	 * Will save the given data to the DB. If no item exists it will create a new
 	 * item, otherwise it'll simply update an existing item's properties
 	 *
@@ -77,16 +103,7 @@
 	Store.prototype.save = function (updateData, callback, id) {
 		var data = JSON.parse(localStorage[this._dbName]);
 		var todos = data.todos;
-
 		callback = callback || function () {};
-
-		// Generate an ID
-	    var newId = ""; 
-	    var charset = "0123456789";
-
-        for (var i = 0; i < 6; i++) {
-     		newId += charset.charAt(Math.floor(Math.random() * charset.length));
-		}
 
 		// If an ID was actually given, find the item and update each property
 		if (id) {
@@ -104,8 +121,8 @@
 		} else {
 
     		// Assign an ID
+    		var newId = this._setItemId(todos);
 			updateData.id = parseInt(newId);
-    
 
 			todos.push(updateData);
 			localStorage[this._dbName] = JSON.stringify(data);
@@ -122,17 +139,11 @@
 	Store.prototype.remove = function (id, callback) {
 		var data = JSON.parse(localStorage[this._dbName]);
 		var todos = data.todos;
-		var todoId;
 		
-		for (var i = 0; i < todos.length; i++) {
-			if (todos[i].id == id) {
-				todoId = todos[i].id;
-			}
-		}
-
-		for (var i = 0; i < todos.length; i++) {
-			if (todos[i].id == todoId) {
-				todos.splice(i, 1);
+		// LOOP OPTIMISATION //
+		for(var i = 0; i < todos.length; i++){
+			if(todos[i].id == id){
+				todos.splice(i, 1)
 			}
 		}
 
